@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Local tooling / per-machine settings (not part of the project)
+.claude/settings.local.json
+.agents/
+skills-lock.json

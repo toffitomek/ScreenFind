@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "screenshot-search"
+version = "1.2.1"
+description = "OCR-powered screenshot search tool for macOS"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
+    "watchdog>=4.0.0",
+    "Pillow>=10.3.0",
+    "rich>=13.7.0",
+    "pyobjc-framework-Vision>=10.3.1",
+    "pyobjc-framework-Quartz>=10.3.1",
+    "pyobjc-core>=10.3.1",
+]
+
+[project.scripts]
+screenshot-search = "screenshot_search.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["screenshot_search*"]
+
+[tool.setuptools.package-data]
+screenshot_search = ["static/*"]

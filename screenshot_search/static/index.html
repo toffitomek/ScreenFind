@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="warm">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScreenFind</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+  <!-- Header -->
+  <div id="header">
+    <div id="search-wrap">
+      <input id="search-input" type="text" placeholder="Search screenshots…" autocomplete="off" spellcheck="false" />
+      <div id="search-spinner"></div>
+    </div>
+    <div id="header-tools">
+      <div id="theme-picker" role="group" aria-label="Colour theme">
+        <!-- dots injected by JS -->
+      </div>
+      <button id="btn-help" class="hdr-btn icon" data-tip="Search syntax and keyboard shortcuts (?)" aria-label="Help">?</button>
+      <button id="btn-stats" class="hdr-btn" data-tip="Watched folders, indexing and statistics">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84a.47.47 0 0 0-.47.41l-.36 2.54a7.4 7.4 0 0 0-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87a.48.48 0 0 0 .12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.48.48 0 0 0-.12-.61zM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2z"/></svg>
+        <span>Settings</span><span id="settings-badge" hidden></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Folder filter (shown when more than one folder is watched) -->
+  <div id="folder-filter" hidden role="tablist" aria-label="Filter results by folder"></div>
+
+  <!-- Inline search-syntax hint, expandable -->
+  <details id="search-hint">
+    <summary>Search tips — click to expand</summary>
+    <div id="search-hint-body">
+      <div class="hint-row"><code>expense card</code> <span>— phrase, words next to each other (default)</span></div>
+      <div class="hint-row"><code>expense AND card</code> <span>— both words, anywhere in the screenshot</span></div>
+      <div class="hint-row"><code>expense OR receipt</code> <span>— either word</span></div>
+      <div class="hint-row"><code>azure NOT devops</code> <span>— exclude a word</span></div>
+      <div class="hint-row"><code>"exact phrase"</code> <span>— exact phrase</span></div>
+      <div class="hint-row"><code>agen</code> <span>— 3+ letters automatically expands as prefix (matches "agent", "agency"…)</span></div>
+      <div class="hint-row"><code>jane.doe@example.com</code> <span>— special chars (.@/-) are split into words automatically</span></div>
+      <div class="hint-row" style="opacity:.85"><span style="grid-column:1/-1;font-size:11px">Press <kbd>?</kbd> for keyboard shortcuts. <kbd>/</kbd> focuses search. <kbd>Del</kbd> moves the selected file to Trash.</span></div>
+    </div>
+  </details>
+
+  <div id="search-error"></div>
+
+  <!-- Main two-panel area -->
+  <div id="main">
+    <!-- Results list -->
+    <div id="results-panel">
+      <div id="results-label">Loading…</div>
+      <div id="results-list" tabindex="-1" role="listbox" aria-label="Search results"></div>
+    </div>
+
+    <!-- Preview pane -->
+    <div id="preview-panel">
+      <div id="preview-empty">Select a result to preview</div>
+      <div id="preview-content">
+        <div id="preview-meta">
+          <strong id="meta-filename"></strong>
+          <div class="meta-grid">
+            <span class="meta-label">Date</span><span id="meta-datetime"></span>
+            <span class="meta-label">Dimensions</span><span class="dims" id="meta-dims"></span>
+            <span class="meta-label">Size</span><span id="meta-size"></span>
+            <span class="meta-label">Folder</span><span id="meta-folder"></span>
+            <span class="meta-label">Path</span>
+            <span class="path-row">
+              <span id="meta-path" class="path"></span>
+              <button class="copy-path-btn" id="btn-copy-path" data-tip="Copy full path">Copy</button>
+            </span>
+          </div>
+        </div>
+        <div id="preview-actions">
+          <button class="action-btn primary" id="btn-open" data-tip="Open in the default app (Enter)">Open</button>
+          <button class="action-btn" id="btn-open-finder" data-tip="Reveal in Finder (⌘ Enter)">Show in Finder</button>
+          <button class="action-btn" id="btn-copy" data-tip="Copy the image to the clipboard (C)">Copy image</button>
+          <button class="action-btn danger" id="btn-delete" data-tip="Move the file to the Trash and remove it from search (Del)">Delete</button>
+        </div>
+        <div class="preview-img-wrap">
+          <img id="preview-img" alt="Preview" />
+          <canvas id="highlight-canvas"></canvas>
+          <div class="highlight-toast" id="highlight-toast"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div id="status-bar">
+    <span id="status-indexed"></span>
+    <span id="status-errors"></span>
+    <span id="status-last"></span>
+    <span id="status-reindex"></span>
+  </div>
+</div>
+
+<!-- Help overlay -->
+<div id="help-overlay" role="dialog" aria-modal="true" aria-label="Search syntax help">
+  <div id="help-box">
+    <button id="help-close" aria-label="Close">×</button>
+    <h2>Search Syntax</h2>
+    <table>
+      <tr><th>Syntax</th><th>Meaning</th><th>Example</th></tr>
+      <tr><td>expense card</td><td>Phrase (words adjacent) — default</td><td>expense card</td></tr>
+      <tr><td>word1 AND word2</td><td>Both words anywhere</td><td>expense AND card</td></tr>
+      <tr><td>word1 OR word2</td><td>Either word</td><td>azure OR aws</td></tr>
+      <tr><td>NOT word</td><td>Exclude word</td><td>azure NOT devops</td></tr>
+      <tr><td>"exact phrase"</td><td>Quoted exact phrase</td><td>"power supply"</td></tr>
+      <tr><td>3+ letters</td><td>Auto-prefix (matches longer words)</td><td>agen → agent, agency…</td></tr>
+    </table>
+    <h3 style="margin-top:14px;margin-bottom:6px;font-size:12px">Keyboard</h3>
+    <table>
+      <tr><td><kbd>/</kbd></td><td>Focus search</td></tr>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Move selection</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>Open file</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>Enter</kbd></td><td>Reveal in Finder</td></tr>
+      <tr><td><kbd>C</kbd></td><td>Copy selected image to clipboard</td></tr>
+      <tr><td><kbd>Del</kbd> / <kbd>Backspace</kbd></td><td>Move selected file to Trash</td></tr>
+      <tr><td><kbd>H</kbd></td><td>Toggle in-image highlights</td></tr>
+      <tr><td><kbd>F</kbd></td><td>Next folder filter (<kbd>⇧F</kbd> previous)</td></tr>
+      <tr><td><kbd>T</kbd></td><td>Cycle themes</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Clear search / close overlays</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- Settings overlay: watched folders + index statistics -->
+<div id="stats-overlay" role="dialog" aria-modal="true" aria-label="Settings">
+  <div id="stats-box">
+    <header class="set-head">
+      <div>
+        <h2>Settings</h2>
+        <p>Choose which folders ScreenFind watches and indexes. New screenshots are picked up automatically.</p>
+      </div>
+      <button id="stats-close" aria-label="Close">×</button>
+    </header>
+
+    <section class="set-section">
+      <div class="set-section-head">
+        <h3>Watched folders</h3>
+        <span id="folders-summary"></span>
+      </div>
+      <div id="folders-list"></div>
+
+      <div id="folder-add" class="add-card">
+        <div class="add-title">Add a folder</div>
+        <div class="add-row">
+          <input id="folder-path-input" type="text" placeholder="Paste a path, e.g. /Users/you/Pictures/Screenshots" autocomplete="off" spellcheck="false" />
+          <button class="btn" id="btn-folder-browse" data-tip="Choose a folder in a Finder dialog">Browse…</button>
+        </div>
+        <div class="add-row add-row-end">
+          <label class="switch">
+            <input type="checkbox" id="folder-recursive" />
+            <span class="switch-track"></span>
+            <span class="switch-label" data-tip="Also index screenshots in every folder inside this one (hidden folders are skipped)">Include subfolders</span>
+          </label>
+          <button class="btn primary" id="btn-folder-add">Add folder</button>
+        </div>
+      </div>
+      <div id="folder-msg" role="status"></div>
+    </section>
+
+    <section class="set-section">
+      <div class="set-section-head">
+        <h3>Index</h3>
+        <button class="btn" id="btn-reindex" data-tip="Quick catch-up for every folder: reads only new or changed screenshots, plus earlier failures and files OneDrive has since downloaded. Takes seconds when nothing changed.">Reindex all folders</button>
+      </div>
+      <div id="stats-content" class="tile-grid"></div>
+    </section>
+  </div>
+</div>
+
+<div id="tooltip" role="tooltip"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
